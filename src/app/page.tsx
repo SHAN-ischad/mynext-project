@@ -13,30 +13,65 @@ import {
 } from "lucide-react";
 import { getTasks } from "../actions/get-tasks-from-db";
 import { Badge } from "@/components/ui/badge";
-
 import EditTaskComponent from "@/components/homeComponents/edit_task";
 import RemoveAllTasks from "@/components/homeComponents/remove_allTasks";
 import { useEffect, useState } from "react";
 import { Tasks } from "../generated/prisma";
+import newTask from "../actions/add-taks";
+import deleteTask from "../actions/delete-task";
+
 export default function App() {
   const [tasksList, setTasksList] = useState<Tasks[]>([]);
+  const [task, setTask] = useState("");
+
+  const loadTasks = async () => {
+    const tasks = await getTasks();
+    if (tasks) {
+      setTasksList(tasks);
+    }
+  };
 
   useEffect(() => {
-    const loadTasks = async () => {
-      const tasks = await getTasks();
-      if (tasks) {
-        setTasksList(tasks);
-      }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     loadTasks();
   }, []);
 
+  const handleAddTask = async () => {
+    try {
+      if (!task || task.length === 0) return;
+
+      const myNewTask = await newTask(task);
+      if (!myNewTask) return;
+      console.log("Tarefa adicionada:", myNewTask);
+      loadTasks();
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    try {
+      if (!id) return;
+      const deletedTask = await deleteTask(id);
+
+      if (!deletedTask) return;
+      loadTasks();
+    } catch (error) {
+      throw error;
+    }
+  };
   return (
     <main className="h-screen  flex items-center flex-col justify-center">
       <Card className="mt-5 w-1/2  ">
         <header className=" flex flex-row justify-center gap-2">
-          <Input className="w-1/2" placeholder="Adicionar tarefa" />
-          <Button className="bg-blue-500 h-8.75">
+          <Input
+            className="w-1/2"
+            placeholder="Adicionar tarefa"
+            onChange={(txt) => {
+              setTask(txt.target.value);
+            }}
+          />
+          <Button className="bg-blue-500 h-8.75" onClick={handleAddTask}>
             <Plus />
             Adicionar
           </Button>
@@ -69,7 +104,13 @@ export default function App() {
                   <p className="flex-1 px-2 text-sm">{task.task}</p>
                   <div className="flex gap-3">
                     <EditTaskComponent />
-                    <Trash size={20} className="cursor-pointer" />
+                    <Trash
+                      size={20}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        handleDeleteTask(task.id);
+                      }}
+                    />
                   </div>
                 </div>
               );
