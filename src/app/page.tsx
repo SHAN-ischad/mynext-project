@@ -19,10 +19,12 @@ import { useEffect, useState } from "react";
 import { Tasks } from "../generated/prisma";
 import newTask from "../actions/add-taks";
 import deleteTask from "../actions/delete-task";
+import { toast } from "sonner";
+import { updateTaskStatus } from "../actions/toggle-task";
 
 export default function App() {
   const [tasksList, setTasksList] = useState<Tasks[]>([]);
-  const [task, setTask] = useState("");
+  const [task, setTask] = useState<string>("");
 
   const loadTasks = async () => {
     const tasks = await getTasks();
@@ -42,7 +44,8 @@ export default function App() {
 
       const myNewTask = await newTask(task);
       if (!myNewTask) return;
-      console.log("Tarefa adicionada:", myNewTask);
+      toast.success("Tarefa adicionada com sucesso!");
+      setTask("");
       loadTasks();
     } catch (error) {
       throw error;
@@ -53,6 +56,7 @@ export default function App() {
     try {
       if (!id) return;
       const deletedTask = await deleteTask(id);
+      toast.warning("Tarefa deletada");
 
       if (!deletedTask) return;
       loadTasks();
@@ -60,6 +64,33 @@ export default function App() {
       throw error;
     }
   };
+
+  const handleToggleTask = async (id: string) => {
+    console.log(tasksList);
+
+    const previusTasks = [...tasksList];
+
+    try {
+      setTasksList((prev) => {
+        const updatedTasksList = prev.map((task) => {
+          if (task.id === id) {
+            return {
+              ...task,
+              isCompleted: !task.isCompleted,
+            };
+          } else {
+            return task;
+          }
+        });
+        return updatedTasksList;
+      });
+      await updateTaskStatus(id);
+    } catch (error) {
+      setTasksList(previusTasks);
+      throw error;
+    }
+  };
+
   return (
     <main className="h-screen  flex items-center flex-col justify-center">
       <Card className="mt-5 w-1/2  ">
@@ -70,6 +101,7 @@ export default function App() {
             onChange={(txt) => {
               setTask(txt.target.value);
             }}
+            value={task}
           />
           <Button className="bg-blue-500 h-8.75" onClick={handleAddTask}>
             <Plus />
@@ -94,14 +126,25 @@ export default function App() {
           </div>
           {/* tasks */}
           <div className=" mt-4 border-b ">
+            {/* Bloco Tarefas  */}
+
             {tasksList.map((task) => {
               return (
                 <div
-                  className=" flex items-center justify-between border-y h-12 "
+                  className=" flex items-center justify-between border-y h-12 cursor-pointer group/tasks  "
                   key={task.id}
                 >
-                  <div className="h-full w-1 bg-gray-900 rounded-md "></div>
-                  <p className="flex-1 px-2 text-sm">{task.task}</p>
+                  <div
+                    className={`${task.isCompleted ? "h-full w-1 bg-green-500 rounded-md " : "h-full w-1 bg-red-500 rounded-md"}`}
+                  ></div>
+                  <p
+                    className="flex-1 px-2 text-sm group-hover/tasks:text-blue-300 duration-200"
+                    onClick={() => {
+                      handleToggleTask(task.id);
+                    }}
+                  >
+                    {task.task}
+                  </p>
                   <div className="flex gap-3">
                     <EditTaskComponent />
                     <Trash
