@@ -10,6 +10,7 @@ import {
   Trash,
   ListChecks,
   Sigma,
+  LoaderCircle,
 } from "lucide-react";
 import { getTasks } from "../actions/get-tasks-from-db";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import { updateTaskStatus } from "../actions/toggle-task";
 export default function App() {
   const [tasksList, setTasksList] = useState<Tasks[]>([]);
   const [task, setTask] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const loadTasks = async () => {
     const tasks = await getTasks();
@@ -39,8 +41,13 @@ export default function App() {
   }, []);
 
   const handleAddTask = async () => {
+    setLoading(true);
     try {
-      if (!task || task.length === 0) return;
+      if (!task || task.length === 0) {
+        toast.warning("Adicione um texto à tarefa");
+        setLoading(false);
+        return;
+      }
 
       const myNewTask = await newTask(task);
       if (!myNewTask) return;
@@ -50,6 +57,7 @@ export default function App() {
     } catch (error) {
       throw error;
     }
+    setLoading(false);
   };
 
   const handleDeleteTask = async (id: string) => {
@@ -104,7 +112,7 @@ export default function App() {
             value={task}
           />
           <Button className="bg-blue-500 h-8.75" onClick={handleAddTask}>
-            <Plus />
+            {loading ? <LoaderCircle className="animate-spin" /> : <Plus />}
             Adicionar
           </Button>
         </header>
@@ -128,30 +136,30 @@ export default function App() {
           <div className=" mt-4 border-b ">
             {/* Bloco Tarefas  */}
 
-            {tasksList.map((task) => {
+            {tasksList.map((taskItem) => {
               return (
                 <div
                   className=" flex items-center justify-between border-y h-12 cursor-pointer group/tasks  "
-                  key={task.id}
+                  key={taskItem.id}
                 >
                   <div
-                    className={`${task.isCompleted ? "h-full w-1 bg-green-500 rounded-md " : "h-full w-1 bg-red-500 rounded-md"}`}
+                    className={`${taskItem.isCompleted ? "h-full w-1 bg-green-500 rounded-md " : "h-full w-1 bg-red-500 rounded-md"}`}
                   ></div>
                   <p
                     className="flex-1 px-2 text-sm group-hover/tasks:text-blue-300 duration-200"
                     onClick={() => {
-                      handleToggleTask(task.id);
+                      handleToggleTask(taskItem.id);
                     }}
                   >
-                    {task.task}
+                    {taskItem.task}
                   </p>
                   <div className="flex gap-3">
-                    <EditTaskComponent />
+                    <EditTaskComponent task={taskItem} loadTasks={loadTasks} />
                     <Trash
                       size={20}
                       className="cursor-pointer"
                       onClick={() => {
-                        handleDeleteTask(task.id);
+                        handleDeleteTask(taskItem.id);
                       }}
                     />
                   </div>
