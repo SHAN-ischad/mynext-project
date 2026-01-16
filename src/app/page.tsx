@@ -27,6 +27,7 @@ export default function App() {
   const [tasksList, setTasksList] = useState<Tasks[]>([]);
   const [task, setTask] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [correntFilter, setCorrentFilter] = useState<"all" | "pending" | "completed">("all");
 
   const loadTasks = async () => {
     const tasks = await getTasks();
@@ -119,15 +120,15 @@ export default function App() {
         <div className="h-1 border-t w-[90%] ml-[5%] " />
         <CardContent>
           <div className="flex gap-1.25  flex-row max-md:flex-col max-md:duration-200 ">
-            <Badge className=" cursor-pointer" variant="default">
+            <Badge className=" cursor-pointer" onClick={} variant={correntFilter === "all" ? "default" : "outline" }>
               <List className="cursor-pointer " />
               Todas
             </Badge>
-            <Badge className=" cursor-pointer" variant="outline">
+            <Badge className=" cursor-pointer" onClick={} variant={correntFilter === "pending" ? "default" : "outline" }>
               <Circle className="cursor-pointer" />
               Não completas
             </Badge>
-            <Badge className=" cursor-pointer" variant="outline">
+            <Badge className=" cursor-pointer" onClick={} variant={correntFilter === "completed" ? "default" : "outline" }>
               <Check className="cursor-pointer" />
               completas
             </Badge>
