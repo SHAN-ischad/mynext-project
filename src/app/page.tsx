@@ -22,12 +22,16 @@ import newTask from "../actions/add-taks";
 import deleteTask from "../actions/delete-task";
 import { toast } from "sonner";
 import { updateTaskStatus } from "../actions/toggle-task";
+import Filter from "@/components/homeComponents/filter";
+import { FilterType } from "@/components/homeComponents/filter";
 
 export default function App() {
   const [tasksList, setTasksList] = useState<Tasks[]>([]);
   const [task, setTask] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [correntFilter, setCorrentFilter] = useState<"all" | "pending" | "completed">("all");
+  const [correntFilter, setCorrentFilter] = useState<FilterType>("all");
+  const [filteredTasks, setFilteredTasks] = useState<Tasks[]>([])
+  const percentTasks = (tasksList.filter(task => task.isCompleted).length) / tasksList.length * 100
 
   const loadTasks = async () => {
     const tasks = await getTasks();
@@ -40,6 +44,20 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     loadTasks();
   }, []);
+  useEffect(() => {
+    switch (correntFilter) {
+      case "all":
+        setFilteredTasks(tasksList)
+        break;
+      case "pending":
+        const pendingTasks = tasksList.filter(task => !task.isCompleted)
+        setFilteredTasks(pendingTasks)
+        break
+      case "completed":
+        const completedTasks = tasksList.filter(task => task.isCompleted)
+        setFilteredTasks(completedTasks)
+    }
+  }, [correntFilter, tasksList])
 
   const handleAddTask = async () => {
     setLoading(true);
@@ -100,6 +118,7 @@ export default function App() {
     }
   };
 
+
   return (
     <main className="h-screen  flex items-center flex-col justify-center">
       <Card className="mt-5 w-1/2  ">
@@ -118,39 +137,27 @@ export default function App() {
           </Button>
         </header>
         <div className="h-1 border-t w-[90%] ml-[5%] " />
+        {/* filters */}
         <CardContent>
-          <div className="flex gap-1.25  flex-row max-md:flex-col max-md:duration-200 ">
-            <Badge className=" cursor-pointer" onClick={} variant={correntFilter === "all" ? "default" : "outline" }>
-              <List className="cursor-pointer " />
-              Todas
-            </Badge>
-            <Badge className=" cursor-pointer" onClick={} variant={correntFilter === "pending" ? "default" : "outline" }>
-              <Circle className="cursor-pointer" />
-              Não completas
-            </Badge>
-            <Badge className=" cursor-pointer" onClick={} variant={correntFilter === "completed" ? "default" : "outline" }>
-              <Check className="cursor-pointer" />
-              completas
-            </Badge>
-          </div>
+          <Filter correntFilter={correntFilter} setCorrentFilter={setCorrentFilter} />
           {/* tasks */}
           <div className=" mt-4 border-b ">
             {/* Bloco Tarefas  */}
 
-            {tasksList.map((taskItem) => {
+            {filteredTasks.map((taskItem) => {
               return (
                 <div
                   className=" flex items-center justify-between border-y h-12 cursor-pointer group/tasks  "
                   key={taskItem.id}
+                  onClick={() => {
+                    handleToggleTask(taskItem.id);
+                  }}
                 >
                   <div
                     className={`${taskItem.isCompleted ? "h-full w-1 bg-green-500 rounded-md " : "h-full w-1 bg-red-500 rounded-md"}`}
                   ></div>
                   <p
                     className="flex-1 px-2 text-sm group-hover/tasks:text-blue-300 duration-200"
-                    onClick={() => {
-                      handleToggleTask(taskItem.id);
-                    }}
                   >
                     {taskItem.task}
                   </p>
@@ -172,21 +179,21 @@ export default function App() {
           <div className="mt-[2%] flex justify-between items-center">
             <div className=" flex flex-row items-center gap-1">
               <ListChecks size={18} />
-              <p className="text-sm">Tarefas concluídas(3/3)</p>
+              <p className="text-sm">Tarefas concluídas({tasksList.filter(task => task.isCompleted).length}/{tasksList.length})</p>
             </div>
 
-            <RemoveAllTasks />
+            <RemoveAllTasks loadTasks={loadTasks} taskList={tasksList} />
           </div>
           <div className="h-2 w-full bg-gray-100 mt-4 rounded-md">
             <div
               className="h-full  bg-blue-500 rounded-md"
-              style={{ width: "50%" }}
+              style={{ width: tasksList.length > 1 ? `${percentTasks}%` : "0%" }}
             ></div>
           </div>
           <div className="w-full  flex justify-end mt-2">
             <div className="flex gap-2 items-center">
               <Sigma size={20} />
-              <p className="text-sm">Somatório (1/3)</p>
+              <p className="text-sm">Somatório ({tasksList.length})</p>
             </div>
           </div>
         </CardContent>
