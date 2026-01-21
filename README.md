@@ -147,13 +147,6 @@ Durante o desenvolvimento deste projeto, utilizei os seguintes recursos:
 - [Documentação do Prisma](https://www.prisma.io/docs)
 - [Documentação do Tailwind CSS](https://tailwindcss.com/docs)
 
-## 🚧 Funcionalidades em Desenvolvimento
-
-- [ ] Autenticação de usuários
-- [ ] Sistema de CRUD
-- [ ] Integração com API externa
-- [ ] Testes unitários e de integração
-
 ## 🤝 Contribuindo
 
 Como este é um projeto de aprendizado, sugestões e feedback são sempre bem-vindos!
